@@ -1,12 +1,12 @@
-const mongoose = require('mongoose'); // Add this line to fix the error
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
-  password: { type: String, required: true }, // Should be hashed for security 
-  role: { 
-    type: String, 
-    enum: ['Admin', 'FrontDesk'], 
-    default: 'FrontDesk' 
+  password: { type: String, required: true },
+  role: {
+    type: String,
+    enum: ['Admin', 'FrontDesk'],
+    default: 'FrontDesk'
   }
 }, { timestamps: true });
 

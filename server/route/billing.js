@@ -1,15 +1,26 @@
-const express = require('express');
-const router = express.Router();
+const express  = require('express');
+const router   = express.Router();
+const { ServiceCharge, generateInvoice } = require('../models/billing');
 
-// Add Service Charge (F&B, Laundry, Minibar)
+// Add a service charge
 router.post('/add-service', async (req, res) => {
-    // Billing Logic: (Room Rate * Days) + Σ(Extra Services) [cite: 21]
-    res.send("Extra Service Billing Route");
+  try {
+    const charge      = new ServiceCharge(req.body);
+    const savedCharge = await charge.save();
+    res.status(201).json({ message: 'Service charge added', charge: savedCharge });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-// Generate Consolidated Invoice [cite: 18]
+// Generate invoice for a booking
 router.get('/invoice/:bookingId', async (req, res) => {
-    res.send("Generate Total Bill");
+  try {
+    const invoice = await generateInvoice(req.params.bookingId);
+    res.json(invoice);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

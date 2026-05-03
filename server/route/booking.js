@@ -1,27 +1,49 @@
-const express = require('express');
-const router = express.Router();
-const Booking = require('../models/booking');
-const Room = require('../models/room'); // Needed to update status
+const express  = require('express');
+const router   = express.Router();
+const Booking  = require('../models/booking');
+const Room     = require('../models/room');
 
-// POST: Front Desk Check-in
+// Check-in
 router.post('/checkin', async (req, res) => {
-    try {
-        const { guest, room, checkIn } = req.body;
+  try {
+    const { guest, room, checkIn } = req.body;
 
-        // 1. Create the new booking
-        const booking = new Booking({ guest, room, checkIn });
-        await booking.save();
+    const booking = new Booking({ guest, room, checkIn });
+    await booking.save();
 
-        // 2. Update Room status to 'Occupied' (Phase 2 Requirement)
-        await Room.findByIdAndUpdate(room, { status: 'Occupied' });
+    await Room.findByIdAndUpdate(room, { status: 'Occupied' });
 
-        res.status(201).json({ 
-            message: "Check-in successful! Room status updated to Occupied.", 
-            booking 
-        });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
+    res.status(201).json({ message: 'Check-in successful! Room status updated to Occupied.', booking });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Check-out
+router.patch('/checkout/:bookingId', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.bookingId);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+    booking.checkOut = new Date();
+    await booking.save();
+
+    await Room.findByIdAndUpdate(booking.room, { status: 'Available' });
+
+    res.json({ message: 'Check-out successful! Room is now Available.', booking });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Get all bookings
+router.get('/all', async (req, res) => {
+  try {
+    const bookings = await Booking.find().populate('guest').populate('room');
+    res.json(bookings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
