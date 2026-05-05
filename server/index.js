@@ -12,6 +12,9 @@ const roomRoutes        = require('./route/room');
 const bookingRoutes     = require('./route/booking');
 const billingRoutes     = require('./route/billing');
 const maintenanceRoutes = require('./route/maintenance');
+const pricingRoutes = require('./route/pricing');   
+// ...
+app.use('/api/pricing', pricingRoutes);             
 
 app.use(express.json());
 
@@ -24,6 +27,7 @@ app.use('/api/rooms',       roomRoutes);
 app.use('/api/bookings',    bookingRoutes);
 app.use('/api/billing',     billingRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/pricing', pricingRoutes); 
 
 app.listen(port, () => {
   console.log(`🚀 HMS Server listening on port ${port}`);

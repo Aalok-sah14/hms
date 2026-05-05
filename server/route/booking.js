@@ -46,4 +46,26 @@ router.get('/all', async (req, res) => {
   }
 });
 
+//total amount
+router.patch('/checkout/:bookingId', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.bookingId);
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+
+    booking.checkOut = new Date();
+
+    // ← ADD THIS: calculate and save total
+    const { generateInvoice } = require('../models/billing');
+    const invoice = await generateInvoice(req.params.bookingId);
+    booking.totalAmount = invoice.grandTotal;
+
+    await booking.save();
+    await Room.findByIdAndUpdate(booking.room, { status: 'Available' });
+
+    res.json({ message: 'Check-out successful!', booking, invoice });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 module.exports = router;
