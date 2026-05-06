@@ -1,6 +1,6 @@
 "use client";
-import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const STATS = [
   { label: "Total Rooms",     value: "48",         sub: "12 available",    color: "from-blue-500 to-blue-700" },
