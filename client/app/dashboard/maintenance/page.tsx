@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { getMaintenance, addMaintenance, updateMaintenance } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 export default function MaintenancePage() {
   const [tasks, setTasks] = useState([]);
