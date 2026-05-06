@@ -22,7 +22,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-white">Broadway HMS</h1>
+          <h1 className="text-3xl font-bold text-white"> HMS</h1>
           <p className="text-blue-300 text-sm mt-1">Hotel Management System</p>
         </div>
         <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8">
