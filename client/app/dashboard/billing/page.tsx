@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { addServiceCharge, getInvoice } from "@/lib/api";
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
