@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { addServiceCharge, getInvoice } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 export default function BillingPage() {
   const [sForm, setSForm]   = useState({ booking: "", serviceType: "Food & Beverages", amount: "", description: "" });

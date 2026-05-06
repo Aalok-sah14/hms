@@ -21,13 +21,10 @@ export const Sidebar = () => {
 
   return (
     <aside className="w-64 bg-slate-900 min-h-screen flex flex-col">
-      {/* Logo */}
       <div className="px-6 py-6 border-b border-white/10">
         <p className="text-white font-bold">Broadway HMS</p>
         <p className="text-slate-400 text-xs">Kathmandu, Nepal</p>
       </div>
-
-      {/* Nav Links */}
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
         {NAV.map(n => (
           <button key={n.href} onClick={() => router.push(n.href)}
@@ -39,8 +36,6 @@ export const Sidebar = () => {
           </button>
         ))}
       </nav>
-
-      {/* Logout */}
       <div className="px-3 py-4 border-t border-white/10">
         <button onClick={logout}
           className="w-full text-left px-4 py-2.5 rounded-xl text-sm text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 transition-all">
