@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { getBookings, checkIn, checkOut } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
