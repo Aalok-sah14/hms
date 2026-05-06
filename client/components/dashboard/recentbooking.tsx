@@ -25,4 +25,5 @@ export default function RecentBookings() {
       </div>
     </div>
   );
+  
 }
