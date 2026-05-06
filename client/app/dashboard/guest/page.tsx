@@ -2,8 +2,8 @@
 import { useState, useEffect } from "react";
 import { getGuests, registerGuest } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function GuestsPage() {
   const [guests, setGuests] = useState([]);
