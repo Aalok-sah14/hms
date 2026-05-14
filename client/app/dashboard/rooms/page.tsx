@@ -30,7 +30,7 @@ export default function RoomsPage() {
       {show && (
         <Card className="p-6 mb-6">
           <h3 className="font-semibold text-gray-700 mb-4">Add New Room</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-black">
             <Input label="Room Number"      placeholder="101"  onChange={e => setForm({...form, roomNumber: e.target.value})} />
             <Select label="Type"            options={["Single","Double","Suite"]}                       onChange={e => setForm({...form, type: e.target.value})} />
             <Select label="Class"           options={["Standard","Deluxe","Premium"]}                  onChange={e => setForm({...form, roomClass: e.target.value})} />

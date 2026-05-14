@@ -28,7 +28,7 @@ export default function GuestsPage() {
       {show && (
         <Card className="p-6 mb-6">
           <h3 className="font-semibold text-gray-700 mb-4">New Guest</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-black">
             <Input label="Full Name"    placeholder="Aarav Sharma"  onChange={e => setForm({...form, name: e.target.value})} />
             <Input label="Phone"        placeholder="98XXXXXXXX"    onChange={e => setForm({...form, phone: e.target.value})} />
             <Input label="Address"      placeholder="Kathmandu"     onChange={e => setForm({...form, address: e.target.value})} />

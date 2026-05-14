@@ -28,9 +28,9 @@ export default function MaintenancePage() {
       {show && (
         <Card className="p-6 mb-6">
           <h3 className="font-semibold text-gray-700 mb-4">Create Task</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input label="Room ID"    placeholder="Room ObjectId"  onChange={e => setForm({...form, room: e.target.value})} />
-            <Input label="Staff ID"   placeholder="Staff ObjectId" onChange={e => setForm({...form, staffAssigned: e.target.value})} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-black">
+            <Input label="Room ID "    placeholder="Room Id"  onChange={e => setForm({...form, room: e.target.value})} />
+            <Input label="Staff ID"   placeholder="Staff Id" onChange={e => setForm({...form, staffAssigned: e.target.value})} />
             <Select label="Issue Type" options={["Cleaning","Repair","Inspection","Laundry Pick-up"]} onChange={e => setForm({...form, issueType: e.target.value})} />
             <Select label="Priority"   options={["Low","Medium","High"]}                             onChange={e => setForm({...form, priority: e.target.value})} />
             <Input label="Notes"      placeholder="Details..."    onChange={e => setForm({...form, notes: e.target.value})} />

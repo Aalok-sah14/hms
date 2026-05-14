@@ -21,7 +21,7 @@ export default function BillingPage() {
 
         <Card className="p-6">
           <h3 className="font-semibold text-gray-700 mb-4">Add Service Charge</h3>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 text-black">
             <Input label="Booking ID"    placeholder="ObjectId"  onChange={e => setSForm({...sForm, booking: e.target.value})} />
             <Select label="Service Type" options={["Food & Beverages","Laundry","Drinks & Minibar"]} onChange={e => setSForm({...sForm, serviceType: e.target.value})} />
             <Input label="Amount (NPR)"  type="number"           onChange={e => setSForm({...sForm, amount: e.target.value})} />
