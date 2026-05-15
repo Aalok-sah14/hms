@@ -1,58 +1,147 @@
 "use client";
-import { useState } from "react";
-import { addServiceCharge, getInvoice } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { useState, useEffect } from "react";
+import { addServiceCharge, getInvoice, getBookings } from "@/lib/api";
 
 export default function BillingPage() {
-  const [sForm, setSForm]   = useState({ booking: "", serviceType: "Food & Beverages", amount: "", description: "" });
-  const [bookingId, setBookingId] = useState("");
+  const [bookings, setBookings] = useState<any[]>([]);
   const [invoice, setInvoice]     = useState<any>(null);
+  const [invoiceId, setInvoiceId] = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [form, setForm]           = useState({
+    booking: "", serviceType: "Food & Beverages", amount: "", description: ""
+  });
 
-  const handleCharge  = async () => { await addServiceCharge(sForm); alert("Charge added!"); };
-  const handleInvoice = async () => { const data = await getInvoice(bookingId); setInvoice(data); };
+  useEffect(() => {
+    getBookings().then(data => setBookings(Array.isArray(data) ? data.filter((b: any) => !b.checkOut) : []));
+  }, []);
+
+  const handleCharge = async () => {
+    if (!form.booking || !form.amount) {
+      alert("Please select booking and enter amount");
+      return;
+    }
+    const res = await addServiceCharge({
+      ...form,
+      amount: Number(form.amount)
+    });
+    if (res.error) { alert("Error: " + res.error); return; }
+    alert("Service charge added successfully!");
+    setForm({ booking: "", serviceType: "Food & Beverages", amount: "", description: "" });
+  };
+
+  const handleInvoice = async () => {
+    if (!invoiceId) { alert("Please select a booking"); return; }
+    setLoading(true);
+    const data = await getInvoice(invoiceId);
+    setInvoice(data);
+    setLoading(false);
+  };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Billing</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">Billing</h1>
+      <p className="text-sm text-gray-500 mb-6">Service charges & invoice generation</p>
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-        <Card className="p-6">
+        {/* Add Service Charge */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="font-semibold text-gray-700 mb-4">Add Service Charge</h3>
-          <div className="flex flex-col gap-4 text-black">
-            <Input label="Booking ID"    placeholder="ObjectId"  onChange={e => setSForm({...sForm, booking: e.target.value})} />
-            <Select label="Service Type" options={["Food & Beverages","Laundry","Drinks & Minibar"]} onChange={e => setSForm({...sForm, serviceType: e.target.value})} />
-            <Input label="Amount (NPR)"  type="number"           onChange={e => setSForm({...sForm, amount: e.target.value})} />
-            <Input label="Description"  placeholder="Optional"  onChange={e => setSForm({...sForm, description: e.target.value})} />
-            <Button onClick={handleCharge}>Add Charge</Button>
-          </div>
-        </Card>
+          <div className="flex flex-col gap-4">
 
-        <Card className="p-6">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Select Active Booking</label>
+              <select value={form.booking} onChange={e => setForm({...form, booking: e.target.value})}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                <option value="">-- Select Booking --</option>
+                {bookings.map((b: any) => (
+                  <option key={b._id} value={b._id}>
+                    {b.guest?.name ?? "Guest"} — Room {b.room?.roomNumber ?? "?"} — {b.checkIn?.slice(0,10)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Service Type</label>
+              <select value={form.serviceType} onChange={e => setForm({...form, serviceType: e.target.value})}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                <option>Food & Beverages</option>
+                <option>Laundry</option>
+                <option>Drinks & Minibar</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Amount (NPR)</label>
+              <input type="number" placeholder="500" value={form.amount}
+                onChange={e => setForm({...form, amount: e.target.value})}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Description</label>
+              <input placeholder="Optional notes" value={form.description}
+                onChange={e => setForm({...form, description: e.target.value})}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+              />
+            </div>
+
+            <button onClick={handleCharge}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold">
+              Add Charge
+            </button>
+          </div>
+        </div>
+
+        {/* Generate Invoice */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="font-semibold text-gray-700 mb-4">Generate Invoice</h3>
           <div className="flex flex-col gap-4">
-            <Input label="Booking ID" placeholder="ObjectId" onChange={e => setBookingId(e.target.value)} />
-            <Button variant="success" onClick={handleInvoice}>Generate Invoice</Button>
-          </div>
-          {invoice && (
-            <div className="mt-6 border border-dashed border-gray-200 rounded-xl p-5 bg-gray-50">
-              <div className="flex flex-col gap-2 text-sm">
-                <div className="flex justify-between text-gray-600">
-                  <span>Room Total</span><span>NPR {invoice.roomTotal}</span>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Select Booking</label>
+              <select value={invoiceId} onChange={e => setInvoiceId(e.target.value)}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                <option value="">-- Select Booking --</option>
+                {bookings.map((b: any) => (
+                  <option key={b._id} value={b._id}>
+                    {b.guest?.name ?? "Guest"} — Room {b.room?.roomNumber ?? "?"} — {b.checkIn?.slice(0,10)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button onClick={handleInvoice}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold">
+              {loading ? "Generating..." : "Generate Invoice"}
+            </button>
+
+            {invoice && (
+              <div className="border border-dashed border-gray-200 rounded-xl p-5 bg-gray-50 mt-2">
+                <div className="flex justify-between mb-3">
+                  <span className="font-bold text-gray-700">Invoice</span>
+                  <span className="text-xs text-gray-400">{invoiceId.slice(-6).toUpperCase()}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Services Total</span><span>NPR {invoice.servicesTotal}</span>
-                </div>
-                <div className="flex justify-between font-bold text-gray-800 border-t pt-2 mt-2">
-                  <span>Grand Total</span>
-                  <span className="text-blue-600">NPR {invoice.grandTotal}</span>
+                <div className="flex flex-col gap-2 text-sm">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Room Total</span>
+                    <span>NPR {invoice.roomTotal}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Services Total</span>
+                    <span>NPR {invoice.servicesTotal}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-gray-800 border-t border-gray-200 pt-2 mt-1">
+                    <span>Grand Total</span>
+                    <span className="text-blue-600">NPR {invoice.grandTotal}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </Card>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
