@@ -3,23 +3,26 @@ import { useState, useEffect } from "react";
 import { getMaintenance, addMaintenance, updateMaintenance, getRooms } from "@/lib/api";
 
 export default function MaintenancePage() {
-  const [tasks, setTasks]     = useState([]);
-  const [rooms, setRooms]     = useState([]);
+  // ✅ ALL useState at TOP
+  const [tasks, setTasks]     = useState<any[]>([]);
+  const [rooms, setRooms]     = useState<any[]>([]);
   const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(true);
   const [form, setForm]       = useState({
     room: "", issueType: "Cleaning", priority: "Medium", notes: ""
   });
 
-  const load = async () => {
+  useEffect(() => {
+    getRooms().then(d => setRooms(Array.isArray(d) ? d : []));
+    loadTasks();
+  }, []);
+
+  const loadTasks = async () => {
     setLoading(true);
-    const [t, r] = await Promise.all([getMaintenance(), getRooms()]);
-    const [tasks, setTasks] = useState<any[]>([]);
-    const [rooms, setRooms] = useState<any[]>([]);
+    const data = await getMaintenance();
+    setTasks(Array.isArray(data) ? data : []);
     setLoading(false);
   };
-
-  useEffect(() => { load(); }, []);
 
   const handleSave = async () => {
     if (!form.room) { alert("Please select a room"); return; }
@@ -27,17 +30,17 @@ export default function MaintenancePage() {
     if (res.error) { alert("Error: " + res.error); return; }
     setForm({ room: "", issueType: "Cleaning", priority: "Medium", notes: "" });
     setShow(false);
-    load();
-  };
-
-  const handleResolve = async (id: string) => {
-    await updateMaintenance(id, { status: "Resolved", completedAt: new Date() });
-    load();
+    loadTasks();
   };
 
   const handleProgress = async (id: string) => {
     await updateMaintenance(id, { status: "In-Progress" });
-    load();
+    loadTasks();
+  };
+
+  const handleResolve = async (id: string) => {
+    await updateMaintenance(id, { status: "Resolved", completedAt: new Date() });
+    loadTasks();
   };
 
   const statusColor: Record<string, string> = {
@@ -72,18 +75,25 @@ export default function MaintenancePage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Select Room</label>
-              <select value={form.room} onChange={e => setForm({...form, room: e.target.value})}
+              <select value={form.room}
+                onChange={e => setForm({...form, room: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 <option value="">-- Select Room --</option>
                 {rooms.map((r: any) => (
-                  <option key={r._id} value={r._id}>Room {r.roomNumber} — {r.type}</option>
+                  <option key={r._id} value={r._id}>
+                    Room {r.roomNumber} · {r.type} · {r.status}
+                  </option>
                 ))}
               </select>
+              {rooms.length === 0 && (
+                <p className="text-xs text-rose-500 mt-1">⚠️ No rooms found. Add a room first.</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Issue Type</label>
-              <select value={form.issueType} onChange={e => setForm({...form, issueType: e.target.value})}
+              <select value={form.issueType}
+                onChange={e => setForm({...form, issueType: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 <option>Cleaning</option>
                 <option>Repair</option>
@@ -94,7 +104,8 @@ export default function MaintenancePage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Priority</label>
-              <select value={form.priority} onChange={e => setForm({...form, priority: e.target.value})}
+              <select value={form.priority}
+                onChange={e => setForm({...form, priority: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 <option>Low</option>
                 <option>Medium</option>
@@ -104,7 +115,8 @@ export default function MaintenancePage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Notes</label>
-              <input placeholder="Details about the issue..." value={form.notes}
+              <input placeholder="Details about the issue..."
+                value={form.notes}
                 onChange={e => setForm({...form, notes: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
               />
@@ -157,7 +169,7 @@ export default function MaintenancePage() {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-gray-400 text-xs">{m.notes || "—"}</td>
-                    <td className="px-5 py-3 flex gap-2">
+                    <td className="px-5 py-3">
                       {m.status === "Pending" && (
                         <button onClick={() => handleProgress(m._id)}
                           className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-semibold">

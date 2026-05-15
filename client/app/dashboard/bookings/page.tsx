@@ -3,24 +3,28 @@ import { useState, useEffect } from "react";
 import { getBookings, checkIn, checkOut, getGuests, getRooms } from "@/lib/api";
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = useState([]);
-  const [guests, setGuests]     = useState([]);
-  const [rooms, setRooms]       = useState([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [guests, setGuests]     = useState<any[]>([]);
+  const [rooms, setRooms]       = useState<any[]>([]);
   const [show, setShow]         = useState(false);
   const [loading, setLoading]   = useState(true);
-  const [form, setForm]         = useState({ guest: "", room: "", checkIn: "" });
+  const [form, setForm]         = useState({
+    guest: "", room: "", checkIn: ""
+  });
 
-  const load = async () => {
+  // ✅ Load guests and rooms ONCE on mount — separate from bookings load
+  useEffect(() => {
+    getGuests().then(d => setGuests(Array.isArray(d) ? d : []));
+    getRooms().then(d => setRooms(Array.isArray(d) ? d : []));
+    loadBookings();
+  }, []);
+
+  const loadBookings = async () => {
     setLoading(true);
-    const [b, g, r] = await Promise.all([getBookings(), getGuests(), getRooms()]);
-    const [bookings, setBookings] = useState<any[]>([]);
-    const [guests, setGuests]     = useState<any[]>([]);
-    const [rooms, setRooms]       = useState<any[]>([]);
-    
+    const data = await getBookings();
+    setBookings(Array.isArray(data) ? data : []);
     setLoading(false);
   };
-
-  useEffect(() => { load(); }, []);
 
   const handleCheckIn = async () => {
     if (!form.guest || !form.room || !form.checkIn) {
@@ -31,12 +35,12 @@ export default function BookingsPage() {
     if (res.error) { alert("Error: " + res.error); return; }
     setForm({ guest: "", room: "", checkIn: "" });
     setShow(false);
-    load();
+    loadBookings(); // ✅ only reload bookings, not guests/rooms
   };
 
   const handleCheckOut = async (id: string) => {
     await checkOut(id);
-    load();
+    loadBookings();
   };
 
   return (
@@ -57,27 +61,35 @@ export default function BookingsPage() {
           <h3 className="font-semibold text-gray-700 mb-4">New Check-In</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-            {/* Guest Dropdown */}
+            {/* ✅ Guest dropdown by NAME */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Select Guest</label>
-              <select value={form.guest} onChange={e => setForm({...form, guest: e.target.value})}
+              <select value={form.guest}
+                onChange={e => setForm({...form, guest: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 <option value="">-- Select Guest --</option>
                 {guests.map((g: any) => (
-                  <option key={g._id} value={g._id}>{g.name} — {g.phone}</option>
+                  <option key={g._id} value={g._id}>
+                    {g.name} · {g.phone}
+                  </option>
                 ))}
               </select>
             </div>
 
-            {/* Room Dropdown */}
+            {/* ✅ Room dropdown by ROOM NUMBER */}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Select Room</label>
-              <select value={form.room} onChange={e => setForm({...form, room: e.target.value})}
+              <select value={form.room}
+                onChange={e => setForm({...form, room: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 <option value="">-- Select Room --</option>
-                {rooms.filter((r: any) => r.status === "Available").map((r: any) => (
-                  <option key={r._id} value={r._id}>Room {r.roomNumber} — {r.type} — NPR {r.basePrice}</option>
-                ))}
+                {rooms
+                  .filter((r: any) => r.status === "Available")
+                  .map((r: any) => (
+                    <option key={r._id} value={r._id}>
+                      Room {r.roomNumber} · {r.type} · NPR {r.basePrice}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -91,6 +103,19 @@ export default function BookingsPage() {
             </div>
 
           </div>
+
+          {/* Info box */}
+          {guests.length === 0 && (
+            <p className="text-xs text-rose-500 bg-rose-50 px-3 py-2 rounded-lg mt-3">
+              ⚠️ No guests found. Please register a guest first.
+            </p>
+          )}
+          {rooms.filter((r: any) => r.status === "Available").length === 0 && (
+            <p className="text-xs text-rose-500 bg-rose-50 px-3 py-2 rounded-lg mt-3">
+              ⚠️ No available rooms. Please add a room first.
+            </p>
+          )}
+
           <div className="flex gap-3 mt-5">
             <button onClick={handleCheckIn}
               className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold">
@@ -127,7 +152,8 @@ export default function BookingsPage() {
                     <td className="px-5 py-3 text-gray-500">{b.checkIn?.slice(0,10)}</td>
                     <td className="px-5 py-3 text-gray-500">{b.checkOut?.slice(0,10) ?? "—"}</td>
                     <td className="px-5 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${b.checkOut ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-700"}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold
+                        ${b.checkOut ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-700"}`}>
                         {b.checkOut ? "Checked Out" : "Active"}
                       </span>
                     </td>

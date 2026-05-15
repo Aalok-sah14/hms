@@ -3,38 +3,46 @@ import { useState, useEffect } from "react";
 import { addServiceCharge, getInvoice, getBookings } from "@/lib/api";
 
 export default function BillingPage() {
-  const [bookings, setBookings] = useState<any[]>([]);
+  // ✅ ALL useState at TOP
+  const [bookings, setBookings]   = useState<any[]>([]);
   const [invoice, setInvoice]     = useState<any>(null);
   const [invoiceId, setInvoiceId] = useState("");
-  const [loading, setLoading]     = useState(false);
-  const [form, setForm]           = useState({
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [form, setForm] = useState({
     booking: "", serviceType: "Food & Beverages", amount: "", description: ""
   });
 
   useEffect(() => {
-    getBookings().then(data => setBookings(Array.isArray(data) ? data.filter((b: any) => !b.checkOut) : []));
+    getBookings().then(data => {
+      const active = Array.isArray(data)
+        ? data.filter((b: any) => !b.checkOut)
+        : [];
+      setBookings(active);
+    });
   }, []);
 
   const handleCharge = async () => {
     if (!form.booking || !form.amount) {
-      alert("Please select booking and enter amount");
+      alert("Please select a booking and enter amount");
       return;
     }
     const res = await addServiceCharge({
-      ...form,
-      amount: Number(form.amount)
+      booking:     form.booking,
+      serviceType: form.serviceType,
+      amount:      Number(form.amount),
+      description: form.description
     });
     if (res.error) { alert("Error: " + res.error); return; }
-    alert("Service charge added successfully!");
+    alert("✅ Service charge added successfully!");
     setForm({ booking: "", serviceType: "Food & Beverages", amount: "", description: "" });
   };
 
   const handleInvoice = async () => {
     if (!invoiceId) { alert("Please select a booking"); return; }
-    setLoading(true);
+    setInvoiceLoading(true);
     const data = await getInvoice(invoiceId);
     setInvoice(data);
-    setLoading(false);
+    setInvoiceLoading(false);
   };
 
   return (
@@ -51,20 +59,25 @@ export default function BillingPage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Select Active Booking</label>
-              <select value={form.booking} onChange={e => setForm({...form, booking: e.target.value})}
+              <select value={form.booking}
+                onChange={e => setForm({...form, booking: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 <option value="">-- Select Booking --</option>
                 {bookings.map((b: any) => (
                   <option key={b._id} value={b._id}>
-                    {b.guest?.name ?? "Guest"} — Room {b.room?.roomNumber ?? "?"} — {b.checkIn?.slice(0,10)}
+                    {b.guest?.name ?? "Guest"} · Room {b.room?.roomNumber ?? "?"} · {b.checkIn?.slice(0,10)}
                   </option>
                 ))}
               </select>
+              {bookings.length === 0 && (
+                <p className="text-xs text-rose-500 mt-1">⚠️ No active bookings. Check-in a guest first.</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Service Type</label>
-              <select value={form.serviceType} onChange={e => setForm({...form, serviceType: e.target.value})}
+              <select value={form.serviceType}
+                onChange={e => setForm({...form, serviceType: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 <option>Food & Beverages</option>
                 <option>Laundry</option>
@@ -74,15 +87,17 @@ export default function BillingPage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Amount (NPR)</label>
-              <input type="number" placeholder="500" value={form.amount}
+              <input type="number" placeholder="500"
+                value={form.amount}
                 onChange={e => setForm({...form, amount: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase">Description</label>
-              <input placeholder="Optional notes" value={form.description}
+              <label className="text-xs font-semibold text-gray-500 uppercase">Description (Optional)</label>
+              <input placeholder="e.g. Breakfast for 2"
+                value={form.description}
                 onChange={e => setForm({...form, description: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
               />
@@ -102,12 +117,13 @@ export default function BillingPage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Select Booking</label>
-              <select value={invoiceId} onChange={e => setInvoiceId(e.target.value)}
+              <select value={invoiceId}
+                onChange={e => { setInvoiceId(e.target.value); setInvoice(null); }}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
                 <option value="">-- Select Booking --</option>
                 {bookings.map((b: any) => (
                   <option key={b._id} value={b._id}>
-                    {b.guest?.name ?? "Guest"} — Room {b.room?.roomNumber ?? "?"} — {b.checkIn?.slice(0,10)}
+                    {b.guest?.name ?? "Guest"} · Room {b.room?.roomNumber ?? "?"} · {b.checkIn?.slice(0,10)}
                   </option>
                 ))}
               </select>
@@ -115,14 +131,13 @@ export default function BillingPage() {
 
             <button onClick={handleInvoice}
               className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold">
-              {loading ? "Generating..." : "Generate Invoice"}
+              {invoiceLoading ? "Generating..." : "Generate Invoice"}
             </button>
 
             {invoice && (
-              <div className="border border-dashed border-gray-200 rounded-xl p-5 bg-gray-50 mt-2">
+              <div className="border border-dashed border-gray-200 rounded-xl p-5 bg-gray-50">
                 <div className="flex justify-between mb-3">
-                  <span className="font-bold text-gray-700">Invoice</span>
-                  <span className="text-xs text-gray-400">{invoiceId.slice(-6).toUpperCase()}</span>
+                  <span className="font-bold text-gray-700">Invoice Summary</span>
                 </div>
                 <div className="flex flex-col gap-2 text-sm">
                   <div className="flex justify-between text-gray-600">
@@ -142,6 +157,7 @@ export default function BillingPage() {
             )}
           </div>
         </div>
+
       </div>
     </div>
   );

@@ -3,17 +3,19 @@ import { useState, useEffect } from "react";
 import { getGuests, registerGuest } from "@/lib/api";
 
 export default function GuestsPage() {
-  const [guests, setGuests]   = useState([]);
+  // ✅ ALL useState must be here at the TOP — never inside a function
+  const [guests, setGuests]   = useState<any[]>([]);
   const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(true);
   const [form, setForm]       = useState({
     name: "", phone: "", address: "", dob: "", idPhotoUrl: ""
   });
 
+  // ✅ load function BELOW useState — no useState inside here
   const load = async () => {
     setLoading(true);
     const data = await getGuests();
-    const [guests, setGuests] = useState<any[]>([]);
+    setGuests(Array.isArray(data) ? data : []);
     setLoading(false);
   };
 
@@ -25,10 +27,7 @@ export default function GuestsPage() {
       return;
     }
     const res = await registerGuest(form);
-    if (res.error) {
-      alert("Error: " + res.error);
-      return;
-    }
+    if (res.error) { alert("Error: " + res.error); return; }
     setForm({ name: "", phone: "", address: "", dob: "", idPhotoUrl: "" });
     setShow(false);
     load();
@@ -54,8 +53,7 @@ export default function GuestsPage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Full Name</label>
-              <input placeholder="Aarav Sharma"
-                value={form.name}
+              <input placeholder="Aarav Sharma" value={form.name}
                 onChange={e => setForm({...form, name: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
               />
@@ -63,19 +61,15 @@ export default function GuestsPage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Phone</label>
-              <input placeholder="98XXXXXXXX"
-                value={form.phone}
+              <input placeholder="98XXXXXXXX" value={form.phone}
                 onChange={e => setForm({...form, phone: e.target.value})}
-                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-black"
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
               />
             </div>
 
-            
-
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Address</label>
-              <input placeholder="Kathmandu"
-                value={form.address}
+              <input placeholder="Kathmandu" value={form.address}
                 onChange={e => setForm({...form, address: e.target.value})}
                 className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
               />
@@ -83,19 +77,17 @@ export default function GuestsPage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-500 uppercase">Date of Birth</label>
-              <input type="date"
-                value={form.dob}
+              <input type="date" value={form.dob}
                 onChange={e => setForm({...form, dob: e.target.value})}
-                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-black"
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
               />
             </div>
 
             <div className="flex flex-col gap-1 sm:col-span-2">
               <label className="text-xs font-semibold text-gray-500 uppercase">ID Photo URL</label>
-              <input placeholder="https://..."
-                value={form.idPhotoUrl}
+              <input placeholder="https://..." value={form.idPhotoUrl}
                 onChange={e => setForm({...form, idPhotoUrl: e.target.value})}
-                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-black"
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
               />
             </div>
 
@@ -123,7 +115,7 @@ export default function GuestsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-left">
-                  {["Name", "Phone", "Address", "Age"].map(h => (
+                  {["Name","Phone","Address","Age"].map(h => (
                     <th key={h} className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase">{h}</th>
                   ))}
                 </tr>
@@ -142,6 +134,7 @@ export default function GuestsPage() {
                     <td className="px-5 py-3 text-gray-500">{g.phone}</td>
                     <td className="px-5 py-3 text-gray-500">{g.address}</td>
                     <td className="px-5 py-3 text-gray-500">{g.age ?? "—"} yrs</td>
+                    <td className="px-5 py-3 text-gray-400 text-xs font-mono">{g._id}</td>
                   </tr>
                 ))}
               </tbody>
