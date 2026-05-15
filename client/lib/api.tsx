@@ -16,8 +16,7 @@ export const getGuests = () =>
   fetch(`${BASE}/guests/all`, { headers: headers() }).then(r => r.json());
 
 export const registerGuest = (data: object) =>
-  fetch(`${BASE}/guests/register`, { method: "POST", headers: headers(), body: JSON.stringify(data) }).then(r => r.json());
-
+  fetch(`${BASE}/guests/register`, {method: "POST",headers: headers(), body: JSON.stringify(data)}).then(r => r.json());
 // ROOMS
 export const getRooms = () =>
   fetch(`${BASE}/rooms/all`, { headers: headers() }).then(r => r.json());

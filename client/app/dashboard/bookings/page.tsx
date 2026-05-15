@@ -1,21 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getBookings, checkIn, checkOut } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { getBookings, checkIn, checkOut, getGuests, getRooms } from "@/lib/api";
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
+  const [guests, setGuests]     = useState([]);
+  const [rooms, setRooms]       = useState([]);
   const [show, setShow]         = useState(false);
   const [loading, setLoading]   = useState(true);
   const [form, setForm]         = useState({ guest: "", room: "", checkIn: "" });
 
   const load = async () => {
     setLoading(true);
-    const data = await getBookings();
-    setBookings(data);
+    const [b, g, r] = await Promise.all([getBookings(), getGuests(), getRooms()]);
+    const [bookings, setBookings] = useState<any[]>([]);
+    const [guests, setGuests]     = useState<any[]>([]);
+    const [rooms, setRooms]       = useState<any[]>([]);
     setLoading(false);
   };
 
@@ -26,9 +26,10 @@ export default function BookingsPage() {
       alert("Please fill all fields");
       return;
     }
-    await checkIn(form);
-    setShow(false);
+    const res = await checkIn(form);
+    if (res.error) { alert("Error: " + res.error); return; }
     setForm({ guest: "", room: "", checkIn: "" });
+    setShow(false);
     load();
   };
 
@@ -53,13 +54,41 @@ export default function BookingsPage() {
       {show && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h3 className="font-semibold text-gray-700 mb-4">New Check-In</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-black">
-            <Input label="Guest ID" placeholder="Guest ObjectId"
-              value={form.guest} onChange={e => setForm({...form, guest: e.target.value})} />
-            <Input label="Room ID" placeholder="Room ObjectId"
-              value={form.room} onChange={e => setForm({...form, room: e.target.value})} />
-            <Input label="Check-In Date" type="date"
-              value={form.checkIn} onChange={e => setForm({...form, checkIn: e.target.value})} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            {/* Guest Dropdown */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Select Guest</label>
+              <select value={form.guest} onChange={e => setForm({...form, guest: e.target.value})}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                <option value="">-- Select Guest --</option>
+                {guests.map((g: any) => (
+                  <option key={g._id} value={g._id}>{g.name} — {g.phone}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Room Dropdown */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Select Room</label>
+              <select value={form.room} onChange={e => setForm({...form, room: e.target.value})}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                <option value="">-- Select Room --</option>
+                {rooms.filter((r: any) => r.status === "Available").map((r: any) => (
+                  <option key={r._id} value={r._id}>Room {r.roomNumber} — {r.type} — NPR {r.basePrice}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Check-In Date */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Check-In Date</label>
+              <input type="date" value={form.checkIn}
+                onChange={e => setForm({...form, checkIn: e.target.value})}
+                className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+              />
+            </div>
+
           </div>
           <div className="flex gap-3 mt-5">
             <button onClick={handleCheckIn}
@@ -92,12 +121,14 @@ export default function BookingsPage() {
               <tbody className="divide-y divide-gray-50">
                 {bookings.map((b: any) => (
                   <tr key={b._id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 font-medium text-gray-800">{b.guest?.name ?? b.guest}</td>
-                    <td className="px-5 py-3 text-gray-500">{b.room?.roomNumber ?? b.room}</td>
+                    <td className="px-5 py-3 font-medium text-gray-800">{b.guest?.name ?? "—"}</td>
+                    <td className="px-5 py-3 text-gray-500">Room {b.room?.roomNumber ?? "—"}</td>
                     <td className="px-5 py-3 text-gray-500">{b.checkIn?.slice(0,10)}</td>
                     <td className="px-5 py-3 text-gray-500">{b.checkOut?.slice(0,10) ?? "—"}</td>
                     <td className="px-5 py-3">
-                      <Badge text={b.checkOut ? "Checked Out" : "Active"} />
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${b.checkOut ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-700"}`}>
+                        {b.checkOut ? "Checked Out" : "Active"}
+                      </span>
                     </td>
                     <td className="px-5 py-3">
                       {!b.checkOut && (
