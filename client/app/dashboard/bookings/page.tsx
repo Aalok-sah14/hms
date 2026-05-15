@@ -16,6 +16,7 @@ export default function BookingsPage() {
     const [bookings, setBookings] = useState<any[]>([]);
     const [guests, setGuests]     = useState<any[]>([]);
     const [rooms, setRooms]       = useState<any[]>([]);
+    
     setLoading(false);
   };
 
